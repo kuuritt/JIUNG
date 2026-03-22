@@ -171,7 +171,7 @@
     }
 
     function loadData() {
-      fetch('applemusic.csv?t=' + new Date().getTime())
+      fetch('JIUNG_VDC.csv?t=' + new Date().getTime())
         .then(function (res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
           return res.arrayBuffer();
