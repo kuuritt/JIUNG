@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>jiung_k4影通</title>
+  <title>jiung_k4影通 监控中</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
@@ -90,7 +90,7 @@
     </div>
     <div class="card card-sm">
       <div class="card-label"><span class="icon">👥</span>名额人数</div>
-      <input type="number" id="slots" value="30" placeholder="10" oninput="recalculate()" />
+      <input type="number" id="slots" value="10" placeholder="10" oninput="recalculate()" />
       <div class="card-desc">总名额人数</div>
     </div>
   </div>
@@ -142,6 +142,22 @@
         .catch(function (e) { console.error("读取失败", e); });
     }
 
+    // 🌟 修复时间格式 Helper 🌟
+    function formatExcelDate(val) {
+      var t = String(val || '').trim();
+      // 判断是否是 Excel 的数字时间格式 (一般为数字且包含小数点)
+      if (!isNaN(t) && t.length > 5 && t.includes('.')) {
+        var date = new Date((parseFloat(t) - 25569) * 86400 * 1000);
+        return date.getFullYear() + '-' +
+               String(date.getMonth() + 1).padStart(2, '0') + '-' +
+               String(date.getDate()).padStart(2, '0') + ' ' +
+               String(date.getHours()).padStart(2, '0') + ':' +
+               String(date.getMinutes()).padStart(2, '0') + ':' +
+               String(date.getSeconds()).padStart(2, '0');
+      }
+      return t; // 已经是文字直接返回
+    }
+
     function parseCSV(buf) {
       var wb = XLSX.read(buf, { type: 'array' });
       var ws = wb.Sheets[wb.SheetNames[0]];
@@ -152,13 +168,13 @@
         var row = rows[i];
         if (row.length < 4 || row.every(function (c) { return String(c).trim() === ''; })) continue;
 
-        // 直接按无表头处理：第0列时间，第1列渠道，第2列变化，第3列单笔
+        // 🌟 这里应用了时间转换 Helper 🌟
         var singleVal = parseFloat(String(row[3]).replace(/,/g, '')) || 0;
         rawData.push({
-          time:       String(row[0] || '').trim(),
-          source:     String(row[1] || '').trim(),
-          changeText: String(row[2] || '').trim(),
-          single:     Math.abs(singleVal)
+          time:       formatExcelDate(row[0]), // 第0列：时间
+          source:     String(row[1] || '').trim(), // 第1列：来源
+          changeText: String(row[2] || '').trim(), // 第2列：变化描述
+          single:     Math.abs(singleVal)          // 第3列：单笔销量
         });
       }
       processData();
